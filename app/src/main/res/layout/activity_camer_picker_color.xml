@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <LinearLayout
+        android:id="@+id/ll_apply_color"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp">
+
+        <TextView
+            android:id="@+id/tv_color"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="R:000 G:000 B:000"
+            android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/bt_apply"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/camera_picker_apply_selector"
+            android:text="@string/button_read"
+            android:textColor="@color/camera_picker_color_text_color" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="15dp"
+        android:layout_above="@id/ll_apply_color"
+        >
+
+        <SurfaceView
+            android:id="@+id/surfaceview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.example.color_picker.RoundPickerColorView
+            android:id="@+id/view"
+            android:layout_width="144px"
+            android:layout_height="144px"
+            android:layout_gravity="center"
+            android:background="@mipmap/icon_cp_fillet_bg" />
+    </FrameLayout>
+</RelativeLayout>

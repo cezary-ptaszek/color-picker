@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">color-picker</string>
+    <string name="button_read">Read</string>
+    <string name="rgb_color_format">R:%03d&#160;&#160;&#160;G:%03d&#160;&#160;&#160;B:%03d</string>
+</resources>
