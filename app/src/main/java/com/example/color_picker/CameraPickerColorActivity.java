@@ -22,6 +22,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
+import android.speech.tts.TextToSpeech;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.SeekBar;
+
+import java.util.Locale;
 public class CameraPickerColorActivity extends AppCompatActivity implements SurfaceHolder.Callback, Camera.PreviewCallback, View.OnClickListener {
     private SurfaceView mSurfaceView;
     private TextView mTv_color;
@@ -30,11 +39,17 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
     private RoundPickerColorView mColorDisplay;
     private int color;
     private int mCenterX, mCenterY;
+    private TextToSpeech mTTS;
+    private Button mButtonSpeak;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camer_picker_color);
+
+        mButtonSpeak = findViewById(R.id.bt_apply);
+
+
 
         //Pasek stanu
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
@@ -96,7 +111,34 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         int red = (color & 0xff0000) >> 16;
         int green = (color & 0x00ff00) >> 8;
         int blue = (color & 0x0000ff);
-        colorStr = String.format(formatRGBcolor, red, green, blue);
+        colorStr = String.format(formatRGBcolor, red, green, blue) + " color";
+
+        mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    int result = mTTS.setLanguage(Locale.ENGLISH);
+
+                    if (result == TextToSpeech.LANG_MISSING_DATA
+                            || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Log.e("TTS", "Język nie jest wspierany");
+                    } else {
+                        mButtonSpeak.setEnabled(true);
+                    }
+                } else {
+                    Log.e("TTS", "Initialization failed");
+                }
+            }
+        });
+
+
+        mButtonSpeak.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                mTTS.speak(colorStr, TextToSpeech.QUEUE_FLUSH, null);
+                                            }
+                                        }
+        );
 
         if (!TextUtils.isEmpty(colorStr))
             mTv_color.setText(colorStr);
