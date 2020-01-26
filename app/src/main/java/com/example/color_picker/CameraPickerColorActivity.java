@@ -64,6 +64,23 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
     }
 
     private void initCamera(int width, int height) {
+
+        mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    int result = mTTS.setLanguage(Locale.ENGLISH);
+                    mButtonSpeak.setEnabled(true);
+
+                    if (result == TextToSpeech.LANG_MISSING_DATA
+                            || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Log.e("TTS", "Language not supported");
+                    } else {
+                    }
+                }
+            }
+        });
+
         //parametry instancji kamery
         Camera.Parameters parameters = camera.getParameters();
         //pobranie obslugiwanych rozmiarów
@@ -114,28 +131,13 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         int blue = (color & 0x0000ff);
         colorStr = String.format(formatRGBcolor, red, green, blue) + " color";
 
-        mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if (status == TextToSpeech.SUCCESS) {
-                    int result = mTTS.setLanguage(Locale.ENGLISH);
-                    mButtonSpeak.setEnabled(true);
-
-                    if (result == TextToSpeech.LANG_MISSING_DATA
-                            || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Log.e("TTS", "Language not supported");
-                    } else {
-                    }
-                }
-            }
-        });
 
 
         mButtonSpeak.setOnClickListener(new View.OnClickListener() {
                                             @Override
                                             public void onClick(View v) {
                                                 colorStr2 = colorStr;
-                                                mTTS.speak(colorStr2, TextToSpeech.QUEUE_FLUSH, null);
+                                                mTTS.speak(colorStr2, TextToSpeech.QUEUE_FLUSH, null, null);
                                             }
                                         }
         );
