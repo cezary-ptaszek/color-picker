@@ -52,8 +52,6 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
 
         mButtonSpeak = findViewById(R.id.bt_apply);
 
-
-
         //Pasek stanu
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
@@ -134,10 +132,6 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
 
         //rozpoznawanie
         colorStr = rgbToColorString(red, green, blue);
-
-//        colorStr = String.format(formatRGBcolor, red, green, blue);
-
-        System.out.println(red +" "+green+" "+blue);
 
         mButtonSpeak.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -241,7 +235,7 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
             return "No matched color name.";
         }
     }
-    
+
     private ArrayList<ColorName> initColorList(){
         ArrayList<ColorName> colorList = new ArrayList<ColorName>();
         colorList.add(new ColorName("AliceBlue", 0xF0, 0xF8, 0xFF));
