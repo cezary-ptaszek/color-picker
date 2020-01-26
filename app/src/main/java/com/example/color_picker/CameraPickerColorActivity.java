@@ -107,6 +107,7 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         }
     }
 
+
     private void displayColor(int color) {
         int red = (color & 0xff0000) >> 16;
         int green = (color & 0x00ff00) >> 8;
@@ -118,15 +119,13 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
             public void onInit(int status) {
                 if (status == TextToSpeech.SUCCESS) {
                     int result = mTTS.setLanguage(Locale.ENGLISH);
+                    mButtonSpeak.setEnabled(true);
 
                     if (result == TextToSpeech.LANG_MISSING_DATA
                             || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Log.e("TTS", "Język nie jest wspierany");
+                        Log.e("TTS", "Language not supported");
                     } else {
-                        mButtonSpeak.setEnabled(true);
                     }
-                } else {
-                    Log.e("TTS", "Initialization failed");
                 }
             }
         });
@@ -135,14 +134,29 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         mButtonSpeak.setOnClickListener(new View.OnClickListener() {
                                             @Override
                                             public void onClick(View v) {
-                                                mTTS.speak(colorStr, TextToSpeech.QUEUE_FLUSH, null);
+                                                colorStr2 = colorStr;
+                                                mTTS.speak(colorStr2, TextToSpeech.QUEUE_FLUSH, null);
                                             }
                                         }
         );
 
+
+
         if (!TextUtils.isEmpty(colorStr))
             mTv_color.setText(colorStr);
         mColorDisplay.setColor(color);
+
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mTTS != null) {
+            mTTS.stop();
+            mTTS.shutdown();
+        }
+
+        super.onDestroy();
     }
 
     private Camera.Size size;
@@ -150,6 +164,8 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
     private ByteArrayOutputStream stream;
     private Bitmap bmp;
     private String colorStr;
+    private String colorStr2;
+
     private String formatRGBcolor;
 
 
