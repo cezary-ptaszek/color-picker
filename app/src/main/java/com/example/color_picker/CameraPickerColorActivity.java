@@ -23,12 +23,9 @@ import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 import android.speech.tts.TextToSpeech;
-import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.SeekBar;
+
 
 import java.util.Locale;
 public class CameraPickerColorActivity extends AppCompatActivity implements SurfaceHolder.Callback, Camera.PreviewCallback, View.OnClickListener {
@@ -41,6 +38,11 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
     private int mCenterX, mCenterY;
     private TextToSpeech mTTS;
     private Button mButtonSpeak;
+    private Camera.Size size;
+    private YuvImage image;
+    private ByteArrayOutputStream stream;
+    private Bitmap bmp;
+    private String colorStr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +62,6 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
 
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(this);
-        formatRGBcolor = getString(R.string.rgb_color_format);
     }
 
     private void initCamera(int width, int height) {
@@ -125,31 +126,31 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
     }
 
 
-    private void displayColor(int color) {
+    private void displayColor(final int color) {
         int red = (color & 0xff0000) >> 16;
         int green = (color & 0x00ff00) >> 8;
         int blue = (color & 0x0000ff);
-        colorStr = String.format(formatRGBcolor, red, green, blue) + " color";
 
+        //rozpoznawanie
+        colorStr = rgbToColorString(red, green, blue);
 
+//        colorStr = String.format(formatRGBcolor, red, green, blue);
+
+        System.out.println(red +" "+green+" "+blue);
 
         mButtonSpeak.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                colorStr2 = colorStr;
-                                                mTTS.speak(colorStr2, TextToSpeech.QUEUE_FLUSH, null, null);
-                                            }
-                                        }
-        );
-
-
+            @Override
+            public void onClick(View v) {
+                System.out.println("TO JEST KOLOR: "+colorStr);
+                mTTS.speak(colorStr, TextToSpeech.QUEUE_FLUSH, null, null);
+            }
+        });
 
         if (!TextUtils.isEmpty(colorStr))
             mTv_color.setText(colorStr);
         mColorDisplay.setColor(color);
-
-
     }
+
 
     @Override
     protected void onDestroy() {
@@ -160,15 +161,6 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
 
         super.onDestroy();
     }
-
-    private Camera.Size size;
-    private YuvImage image;
-    private ByteArrayOutputStream stream;
-    private Bitmap bmp;
-    private String colorStr;
-    private String colorStr2;
-
-    private String formatRGBcolor;
 
 
     private int getColor(Bitmap source, int intX, int intY) {
@@ -188,6 +180,7 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         return color;
     }
 
+
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         try {
@@ -204,10 +197,12 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         }
     }
 
+
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         initCamera(width, height);
     }
+
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
@@ -217,12 +212,23 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
             camera = null;
         }
     }
+
     public static float getScreenRate(Context context){
         DisplayMetrics dm = context.getResources().getDisplayMetrics();
         float H = dm.heightPixels;
         float W = dm.widthPixels;
 
         return (H/W);
+    }
+
+    public String rgbToColorString(int red, int green, int blue){
+        String name;
+//        if(red, green, blue){
+//
+//        }
+//        ...
+
+        return "";
     }
 
 }
