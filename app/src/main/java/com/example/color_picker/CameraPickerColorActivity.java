@@ -8,12 +8,15 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,42 +25,34 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import android.speech.tts.TextToSpeech;
-import android.util.Log;
-import android.widget.Button;
-
-
 import java.util.Locale;
+
 public class CameraPickerColorActivity extends AppCompatActivity implements SurfaceHolder.Callback, Camera.PreviewCallback, View.OnClickListener {
-    private SurfaceView mSurfaceView;
-    private TextView mTv_color;
+    private static final double SECONDS_LAST_RECOGNIZE = 1;
+    private TextView colorNameText;
     private SurfaceHolder mSurfaceHolder;
     private Camera camera;
-    private RoundPickerColorView mColorDisplay;
-    private int color;
+    private RoundPickerColorView roundPicker;
     private int mCenterX, mCenterY;
     private TextToSpeech mTTS;
-    private Button mButtonSpeak;
-    private Camera.Size size;
-    private YuvImage image;
-    private ByteArrayOutputStream stream;
-    private Bitmap bmp;
+    private Button speakButton;
     private String colorStr;
+    private long lastRecognizeTimestamp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camer_picker_color);
+        speakButton = findViewById(R.id.bt_apply);
 
-        mButtonSpeak = findViewById(R.id.bt_apply);
+        lastRecognizeTimestamp = System.currentTimeMillis() / 1000;
 
         //Pasek stanu
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
-        mSurfaceView = findViewById(R.id.surfaceview);
-        mTv_color =  findViewById(R.id.tv_color);
-        mColorDisplay = findViewById(R.id.view);
+        SurfaceView mSurfaceView = findViewById(R.id.surfaceview);
+        colorNameText = findViewById(R.id.tv_color);
+        roundPicker = findViewById(R.id.view);
 
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(this);
@@ -69,9 +64,9 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
             @Override
             public void onInit(int status) {
                 if (status == TextToSpeech.SUCCESS) {
-                    Locale loc = new Locale ("pol", "PL");
+                    Locale loc = new Locale("pol", "PL");
                     int result = mTTS.setLanguage(loc);
-                    mButtonSpeak.setEnabled(true);
+                    speakButton.setEnabled(true);
 
                     if (result == TextToSpeech.LANG_MISSING_DATA
                             || result == TextToSpeech.LANG_NOT_SUPPORTED) {
@@ -87,7 +82,7 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         //pobranie obslugiwanych rozmiarów
         List<Camera.Size> previewSizes = parameters.getSupportedPreviewSizes();
         float previewRate = getScreenRate(this);
-        float previewRate2 = (height/ (float)width);
+        float previewRate2 = (height / (float) width);
 
 
         //Ustawienie wielkości obrazka
@@ -109,14 +104,14 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
 
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
-        size = camera.getParameters().getPreviewSize();
+        Camera.Size size = camera.getParameters().getPreviewSize();
         try {
-            image = new YuvImage(data, ImageFormat.NV21, size.width, size.height, null);
+            YuvImage image = new YuvImage(data, ImageFormat.NV21, size.width, size.height, null);
             if (image != null) {
-                stream = new ByteArrayOutputStream();
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 image.compressToJpeg(new Rect(0, 0, size.width, size.height), 80, stream);
-                bmp = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
-                color = getColor(bmp, mCenterX, mCenterY);
+                Bitmap bmp = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
+                int color = getColor(bmp, mCenterX, mCenterY);
                 displayColor(color);
                 stream.close();
             }
@@ -132,18 +127,30 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         int blue = (color & 0x0000ff);
 
         //rozpoznawanie
+        final String oldColorStr = colorStr;
         colorStr = rgbToColorString(red, green, blue);
 
-        mButtonSpeak.setOnClickListener(new View.OnClickListener() {
+        long currentTimestamp = System.currentTimeMillis() / 1000;
+        final long lastRecognizeDiff = currentTimestamp - lastRecognizeTimestamp;
+        lastRecognizeTimestamp = currentTimestamp;
+
+        String textToSpeech = colorStr;
+        if ((lastRecognizeDiff) <= SECONDS_LAST_RECOGNIZE * 1000 && !oldColorStr.equals(colorStr)) {
+            textToSpeech = colorStr + " i " + oldColorStr;
+        }
+
+        final String textToSpeechAsFinal = textToSpeech;
+        speakButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mTTS.speak("Kolor " + colorStr, TextToSpeech.QUEUE_FLUSH, null, null);
+                mTTS.speak("Kolor " + textToSpeechAsFinal, TextToSpeech.QUEUE_FLUSH, null, null);
             }
         });
 
-        if (!TextUtils.isEmpty(colorStr))
-            mTv_color.setText(colorStr);
-        mColorDisplay.setColor(color);
+        if (!TextUtils.isEmpty(textToSpeech)) {
+            colorNameText.setText(textToSpeech);
+        }
+        roundPicker.setColor(color);
     }
 
 
@@ -208,15 +215,15 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         }
     }
 
-    public static float getScreenRate(Context context){
+    public static float getScreenRate(Context context) {
         DisplayMetrics dm = context.getResources().getDisplayMetrics();
         float H = dm.heightPixels;
         float W = dm.widthPixels;
 
-        return (H/W);
+        return (H / W);
     }
 
-    public String rgbToColorString(int red, int green, int blue){
+    public String rgbToColorString(int red, int green, int blue) {
         ArrayList<ColorName> colorList = initColorList();
         ColorName closestMatch = null;
         int minMSE = Integer.MAX_VALUE;
@@ -236,7 +243,7 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         }
     }
 
-    private ArrayList<ColorName> initColorList(){
+    private ArrayList<ColorName> initColorList() {
         ArrayList<ColorName> colorList = new ArrayList<ColorName>();
         colorList.add(new ColorName("Niebieski lód", 0xF0, 0xF8, 0xFF));
         colorList.add(new ColorName("Antyczna biel", 0xFA, 0xEB, 0xD7));
