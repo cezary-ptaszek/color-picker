@@ -150,7 +150,7 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
             public void onClick(View v) {
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 Bitmap bmp = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
-                storeImage(bmp)
+                storeImage(bmp);
                 mTTS.speak("Kolor " + colorStr, TextToSpeech.QUEUE_FLUSH, null, null);
             }
         });
