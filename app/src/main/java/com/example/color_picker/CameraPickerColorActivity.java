@@ -275,7 +275,7 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         }
 
         //tworzenie nazwy zdjęcia
-        String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmm").format(new Date());
+        String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmm_ss_SSS").format(new Date());
         File mediaFile;
         String mImageName="MI_"+ timeStamp +".jpg";
         mediaFile = new File(mediaStorageDir.getPath() + File.separator + mImageName);
