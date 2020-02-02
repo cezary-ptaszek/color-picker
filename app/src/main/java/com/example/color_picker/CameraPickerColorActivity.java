@@ -45,7 +45,9 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
     private TextToSpeech mTTS;
     private Button speakButton;
     private String colorStr;
-
+    private YuvImage image;
+    private int previewWidth;
+    private int previewHeight;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,11 +112,13 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
-        Camera.Size size = camera.getParameters().getPreviewSize();
+        Camera.Size previewSize = camera.getParameters().getPreviewSize();
+        previewHeight = previewSize.height;
+        previewWidth = previewSize.width;
         try {
-            YuvImage image = new YuvImage(data, ImageFormat.NV21, size.width, size.height, null);
+            image = new YuvImage(data, ImageFormat.NV21, previewWidth, previewHeight, null);
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            image.compressToJpeg(new Rect(0, 0, size.width, size.height), 80, stream);
+            image.compressToJpeg(new Rect(0, 0, previewWidth, previewHeight), 80, stream);
             Bitmap bmp = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
             int[] color = getColor(bmp, mCenterX, mCenterY);
             displayColor(color);
@@ -149,8 +153,11 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
             @Override
             public void onClick(View v) {
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                Bitmap bmp = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
-                storeImage(bmp);
+                if (image != null) {
+                    image.compressToJpeg(new Rect(0, 0, previewWidth, previewHeight), 80, stream);
+                    Bitmap bmp = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
+                    storeImage(bmp);
+                }
                 mTTS.speak("Kolor " + colorStr, TextToSpeech.QUEUE_FLUSH, null, null);
             }
         });
@@ -253,7 +260,7 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         }
     }
 
-    private  File getOutputMediaFile(){
+    private File getOutputMediaFile(){
         //sprawdzenie czy jest karta SD
         File mediaStorageDir = new File(Environment.getExternalStorageDirectory()
                 + "/Android/data/"
