@@ -3,13 +3,13 @@ package com.example.color_picker;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -26,12 +26,15 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.ByteArrayOutputStream;
-import java.time.Duration;
-import java.time.Instant;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 public class CameraPickerColorActivity extends AppCompatActivity implements SurfaceHolder.Callback, Camera.PreviewCallback, View.OnClickListener {
     private TextView colorNameText;
@@ -87,7 +90,7 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         float previewRate = getScreenRate(this);
 //        float previewRate = (height / (float) width);
 
-        //Ustawienie wielkości obrazka
+        //ustawienie wielkości obrazka
         Camera.Size previewSize = CameraPreviewUtil.getInstance().getPreviewSize(previewSizes, previewRate, 800);
         parameters.setPreviewSize(previewSize.width, previewSize.height);
 
@@ -145,6 +148,9 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
         speakButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                Bitmap bmp = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
+                storeImage(bmp)
                 mTTS.speak("Kolor " + colorStr, TextToSpeech.QUEUE_FLUSH, null, null);
             }
         });
@@ -226,6 +232,49 @@ public class CameraPickerColorActivity extends AppCompatActivity implements Surf
 
         return (H / W);
     }
+
+    private void storeImage(Bitmap image) {
+        File pictureFile = getOutputMediaFile();
+        if (pictureFile == null) {
+            Toast toast = Toast.makeText(this, "Błąd przy tworzeniu zdjęcia, wymagane uprawnienia.", Toast.LENGTH_SHORT);// e.getMessage());
+            toast.show();
+            return;
+        }
+        try {
+            FileOutputStream fos = new FileOutputStream(pictureFile);
+            image.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+            fos.close();
+        } catch (FileNotFoundException e) {
+            Toast toast = Toast.makeText(this, "Plik nie znaleziony.", Toast.LENGTH_SHORT);
+            toast.show();
+        } catch (IOException e) {
+            Toast toast = Toast.makeText(this, "Problem z dostępem do pliku.", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+    }
+
+    private  File getOutputMediaFile(){
+        //sprawdzenie czy jest karta SD
+        File mediaStorageDir = new File(Environment.getExternalStorageDirectory()
+                + "/Android/data/"
+                + getApplicationContext().getPackageName()
+                + "/Files");
+
+        //tworzenie katalogu do zdjęć
+        if (! mediaStorageDir.exists()){
+            if (! mediaStorageDir.mkdirs()){
+                return null;
+            }
+        }
+
+        //tworzenie nazwy zdjęcia
+        String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmm").format(new Date());
+        File mediaFile;
+        String mImageName="MI_"+ timeStamp +".jpg";
+        mediaFile = new File(mediaStorageDir.getPath() + File.separator + mImageName);
+        return mediaFile;
+    }
+
 
     public String doubleColor(String s1, String s2){
         String finalColor = s1.replace(s1.substring(s1.length()-1), "");
